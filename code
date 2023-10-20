@@ -30,3 +30,5 @@ Set-DhcpServerv4OptionValue -ScopeID 1 -OptionID 6 -Value $DNSAddress  # Set DNS
 Set-DhcpServerv4Scope -ScopeId 1 -State Active
 
 Write-Host "AD DS and DHCP roles have been installed and configured, and the host has been renamed to $NewHostname."
+
+7!yw$92@z#66$r@
