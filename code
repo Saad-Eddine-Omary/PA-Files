@@ -1,0 +1,32 @@
+# Variables for AD DS configuration
+$DomainName = "yourdomain.local"
+$SafeModeAdministratorPassword = "YourPassword123"  # Change this to a secure password
+$DNSAddress = "127.0.0.1"  # Replace with your DNS server IP if different
+
+# Variables for DHCP configuration
+$DHCPStartRange = "192.168.1.10"
+$DHCPEndRange = "192.168.1.100"
+$SubnetMask = "255.255.255.0"
+$DHCPScopeName = "YourScopeName"
+
+# New hostname for the server
+$NewHostname = "NewServerName"  # Replace with the desired hostname
+
+# Install AD DS role and promote the server
+Install-WindowsFeature -Name AD-Domain-Services -IncludeManagementTools
+Install-ADDSDomainController -InstallDns -DomainName $DomainName -SafeModeAdministratorPassword (ConvertTo-SecureString $SafeModeAdministratorPassword -AsPlainText -Force)
+
+# Rename the host (computer)
+Rename-Computer -NewName $NewHostname -Force
+
+# Install DHCP role and create a new scope
+Install-WindowsFeature -Name DHCP -IncludeManagementTools
+Add-DhcpServerv4Scope -Name $DHCPScopeName -StartRange $DHCPStartRange -EndRange $DHCPEndRange -SubnetMask $SubnetMask
+
+# Configure DHCP options
+Set-DhcpServerv4OptionValue -ScopeID 1 -OptionID 6 -Value $DNSAddress  # Set DNS server option
+
+# Activate the scope
+Set-DhcpServerv4Scope -ScopeId 1 -State Active
+
+Write-Host "AD DS and DHCP roles have been installed and configured, and the host has been renamed to $NewHostname."
