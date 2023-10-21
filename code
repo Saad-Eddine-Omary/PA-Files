@@ -119,10 +119,10 @@ if ($env:COMPUTERNAME -ne $serverConfig.NewComputerName) {
     }
     # Define the parameters you want to pass to your script
     $ScriptPath = "C:\install-script.ps1"
-    $ConfigFile = "C:\config.json"
+    $ConfigFile = "config.json"
 
     # Create an argument string that includes the script and its parameters
-    $Argument = "-File `"$ScriptPath`" -ConfigFile `"$ConfigFile`""
+    $Argument = "-File `"$ScriptPath`" -Conf `"$ConfigFile`""
     # Create a scheduled task to rerun this script after renaming
     $Action = New-ScheduledTaskAction -Execute 'Powershell' -Argument $Argument
     $Trigger = New-ScheduledTaskTrigger -AtLogon
@@ -145,19 +145,16 @@ if ($env:COMPUTERNAME -ne $serverConfig.NewComputerName) {
     # Configure and configure ADDS
     Write-Output "Configuring ADDS"
 
-    $DomainConfiguration = @{
-        '-DomainName' = $domainConfig.DomainNameDNS;
-        '-DomainNetbiosName' = $domainConfig.DomainNameNetbios;
-        '-DatabasePath' = $domainConfig.DatabasePath;
-        '-LogPath' = $domainConfig.LogPath;
-        '-SysvolPath' = $domainConfig.SysvolPath;
-        '-SafeModeAdministratorPassword' = (ConvertTo-SecureString -AsPlainText $domainConfig.SafeModeAdministratorPassword -Force)
-        '-InstallDns' = $domainConfig.InstallDns;
-        '-NoRebootOnCompletion' = $domainConfig.NoRebootOnCompletion;
-        '-Force' = $domainConfig.Force
-    }
 
-    Install-ADDSForest @DomainConfiguration
+    Install-ADDSForest -DomainName = $domainConfig.DomainNameDNS `
+        -DomainNetbiosName = $domainConfig.DomainNameNetbios `
+        -DatabasePath = $domainConfig.DatabasePath `
+        -LogPath = $domainConfig.LogPath `
+        -SysvolPath = $domainConfig.SysvolPath `
+        -SafeModeAdministratorPassword = (ConvertTo-SecureString -AsPlainText $domainConfig.SafeModeAdministratorPassword -Force) `
+        -InstallDns = $domainConfig.InstallDns `
+        -NoRebootOnCompletion = $domainConfig.NoRebootOnCompletion `
+        -Force = $domainConfig.Force
 
     Start-Sleep -Milliseconds 2000
 
