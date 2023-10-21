@@ -65,12 +65,14 @@ if ($env:COMPUTERNAME -ne $serverConfig.NewComputerName) {
     if ($adDsService.Status -ne 'Running') {
         # Configure and configure ADDS
         Write-Output "Configuring ADDS"
+        $adminPwd = (ConvertTo-SecureString -AsPlainText $domainConfig.SafeModeAdministratorPassword -Force)
         $DomainConfiguration = @{
             DomainName = $domainConfig.DomainNameDNS
             DomainNetbiosName = $domainConfig.DomainNameNetbios
             DatabasePath = $domainConfig.DatabasePath
             LogPath = $domainConfig.LogPath
             SysvolPath = $domainConfig.SysvolPath
+            SafeModeAdministratorPassword = $adminPwd
             InstallDns = $domainConfig.InstallDns
             NoRebootOnCompletion = $domainConfig.NoRebootOnCompletion
             Force = $domainConfig.Force
