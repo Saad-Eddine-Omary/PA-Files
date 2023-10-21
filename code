@@ -118,8 +118,8 @@ if ($env:COMPUTERNAME -ne $serverConfig.NewComputerName) {
         }
     }
     # Define the parameters you want to pass to your script
-    $ScriptPath = C:\install-script.ps1
-    $ConfigFile = C:\config.json
+    $ScriptPath = "C:\install-script.ps1"
+    $ConfigFile = "C:\config.json"
 
     # Create an argument string that includes the script and its parameters
     $Argument = "-File `"$ScriptPath`" -ConfigFile `"$ConfigFile`""
