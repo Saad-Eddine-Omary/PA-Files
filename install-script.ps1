@@ -63,7 +63,7 @@ if ($env:COMPUTERNAME -ne $serverConfig.NewComputerName) {
     # Check if the server is a domain controller
     $DCInfo = Get-ADDomainController -Discover
 
-    if ($DCInfo.Count -gt 0) {
+    if ($DCInfo.Count -lt 0) {
         
 
         # Configure and configure ADDS
