@@ -8,7 +8,7 @@ if ($env:COMPUTERNAME -ne $NewComputerName) {
 
     # Create a scheduled task to rerun this script after renaming
     $Action = New-ScheduledTaskAction -Execute 'Powershell' -Argument "C:\test.ps1"
-    $Trigger = New-ScheduledTaskTrigger -AtStartup -RandomDelay 00:00:30
+    $Trigger = New-ScheduledTaskTrigger -AtLogon
     Register-ScheduledTask -TaskName "RerunScriptAfterReboot" -Action $Action -Trigger $Trigger -RunLevel Highest
 
     # Restart the computer
@@ -25,6 +25,7 @@ if ($env:COMPUTERNAME -ne $NewComputerName) {
     # Remove the scheduled task
     Unregister-ScheduledTask -TaskName "RerunScriptAfterReboot" -Confirm:$false
 }
+
 ----------------------------------
 
 
