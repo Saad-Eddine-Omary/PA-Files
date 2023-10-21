@@ -20,7 +20,6 @@
         "DatabasePath": "C:\\Windows\\NTDS",
         "LogPath": "C:\\Windows\\NTDS",
         "SysvolPath": "C:\\Windows\\SYSVOL",
-        "SafeModeAdministratorPassword": "P@ssw0rd!",
         "InstallDns": true,
         "NoRebootOnCompletion": true,
         "Force": true
