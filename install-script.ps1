@@ -132,7 +132,7 @@ if ($env:COMPUTERNAME -ne $serverConfig.NewComputerName) {
             Add-DhcpServerv4Scope -Name $vlan.ScopeName -StartRange $vlan.StartRange -EndRange $vlan.EndRange -SubnetMask $vlan.SubnetMask -State $vlan.State
 
             # Configure DHCP Options
-            Set-DhcpServerv4OptionValue -OptionID 3 -Value $vlan.DefaultGateway -ScopeName $vlan.ScopeName -ComputerName $serverConfig.NewComputerName
+            Set-DhcpServerv4OptionValue -OptionID 3 -Value $vlan.DefaultGateway -ScopeID $vlan.ScopeID -ComputerName $serverConfig.NewComputerName
             Set-DhcpServerv4OptionValue -DnsDomain $domainConfig.DomainNameDNS -DnsServer $serverConfig.IPAddress -ScopeName $vlan.ScopeName
         }
 
