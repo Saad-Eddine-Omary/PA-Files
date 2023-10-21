@@ -214,3 +214,5 @@ if ($env:COMPUTERNAME -ne $serverConfig.NewComputerName) {
     # Remove the scheduled task
     Unregister-ScheduledTask -TaskName "RerunScriptAfterReboot" -Confirm:$false
 }
+foreach ($vlanName in $dhcpConfig.PSObject.Properties.Name) {
+    $vlan = $dhcpConfig.$vlanName
