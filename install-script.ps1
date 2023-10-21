@@ -20,6 +20,8 @@ $wsusConfig = $config.WSUSConfiguration
 # DHCP Configuration
 $dhcpConfig = $config.DHCPConfiguration
 
+$installState = 0
+
 # Check if the computer has already been renamed
 if ($env:COMPUTERNAME -ne $serverConfig.NewComputerName) {
     # Rename the computer
@@ -54,7 +56,7 @@ if ($env:COMPUTERNAME -ne $serverConfig.NewComputerName) {
     # Check if AD DS is installed
     $ADDSInstalled = Get-WindowsFeature -Name "AD-Domain-Services" | Select-Object -ExpandProperty InstallState
 
-    if ($ADDSInstalled -ne "Installed") {
+    if ($installState -ne 1) {
         # Configure the server's IP/MASK/GW
         New-NetIPAddress -IPAddress $serverConfig.IPAddress -InterfaceAlias "Ethernet" -PrefixLength $serverConfig.PrefixLength -DefaultGateway $serverConfig.DefaultGateway -AddressFamily IPv4 
         # Configure the server's DNS
@@ -87,6 +89,7 @@ if ($env:COMPUTERNAME -ne $serverConfig.NewComputerName) {
 
         Write-Output "ADDS configured !"
 
+        $installState = 1
         Restart-Computer
     } else {
 
