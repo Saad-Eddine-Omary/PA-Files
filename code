@@ -4,15 +4,15 @@ $NewComputerName = "NewServerName"
 # Check if the computer has already been renamed
 if ($env:COMPUTERNAME -ne $NewComputerName) {
     # Rename the computer
-    Rename-Computer -NewName $NewComputerName -Force -Restart
+    Rename-Computer -NewName $NewComputerName -Force 
 
     # Create a scheduled task to rerun this script
-    $Action = New-ScheduledTaskAction -Execute 'Powershell' -Argument '-ExecutionPolicy Bypass -File "C:\Path\To\Your\Script.ps1"'
+    $Action = New-ScheduledTaskAction -Execute 'Powershell' -Argument '-ExecutionPolicy Bypass -File "C:\test.ps1"'
     $Trigger = New-ScheduledTaskTrigger -AtStartup
     Register-ScheduledTask -TaskName "RerunScriptAfterReboot" -Action $Action -Trigger $Trigger
 
-    # Exit script to allow the computer to restart
-    Exit
+    # Restart Computer 
+    Restart-Computer
 }
 
 # Script continues after the computer has been renamed
