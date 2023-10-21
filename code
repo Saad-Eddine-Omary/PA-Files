@@ -7,7 +7,7 @@ if ($env:COMPUTERNAME -ne $NewComputerName) {
     Rename-Computer -NewName $NewComputerName -Force 
 
     # Create a scheduled task to rerun this script
-    $Action = New-ScheduledTaskAction -Execute 'Powershell' -Argument '-ExecutionPolicy Bypass -File "C:\test.ps1"'
+    $Action = New-ScheduledTaskAction -Execute 'Powershell' -Argument "C:\test.ps1"
     $Trigger = New-ScheduledTaskTrigger -AtStartup
     Register-ScheduledTask -TaskName "RerunScriptAfterReboot" -Action $Action -Trigger $Trigger
 
