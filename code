@@ -6,21 +6,24 @@ if ($env:COMPUTERNAME -ne $NewComputerName) {
     # Rename the computer
     Rename-Computer -NewName $NewComputerName -Force 
 
-    # Create a scheduled task to rerun this script
+    # Create a scheduled task to rerun this script after renaming
     $Action = New-ScheduledTaskAction -Execute 'Powershell' -Argument "C:\test.ps1"
     $Trigger = New-ScheduledTaskTrigger -AtStartup
     Register-ScheduledTask -TaskName "RerunScriptAfterReboot" -Action $Action -Trigger $Trigger -RunLevel Highest
 
-    # Restart Computer 
-    Restart-Computer
-}
+    # Restart the computer
+    Restart-Computer -Force
+} else {
+    # Script continues after the computer has been renamed
 
-# Script continues after the computer has been renamed
-# Ensure the "success" folder exists
-$SuccessFolderPath = "C:\success"
-if (-not (Test-Path -Path $SuccessFolderPath -PathType Container)) {
+    # Ensure the "success" folder exists
+    $SuccessFolderPath = "C:\success"
+    if (-not (Test-Path -Path $SuccessFolderPath -PathType Container)) {
+        New-Item -Path $SuccessFolderPath -ItemType Directory
+    }
+
+    # Remove the scheduled task
     Unregister-ScheduledTask -TaskName "RerunScriptAfterReboot" -Confirm:$false
-    New-Item -Path $SuccessFolderPath -ItemType Directory
 }
 ----------------------------------
 
