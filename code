@@ -9,7 +9,7 @@ if ($env:COMPUTERNAME -ne $NewComputerName) {
     # Create a scheduled task to rerun this script
     $Action = New-ScheduledTaskAction -Execute 'Powershell' -Argument "C:\test.ps1"
     $Trigger = New-ScheduledTaskTrigger -AtStartup
-    Register-ScheduledTask -TaskName "RerunScriptAfterReboot" -Action $Action -Trigger $Trigger
+    Register-ScheduledTask -TaskName "RerunScriptAfterReboot" -Action $Action -Trigger $Trigger -RunLevel Highest
 
     # Restart Computer 
     Restart-Computer
