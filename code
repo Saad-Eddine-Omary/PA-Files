@@ -145,13 +145,14 @@ if ($env:COMPUTERNAME -ne $serverConfig.NewComputerName) {
     # Configure and configure ADDS
     Write-Output "Configuring ADDS"
 
+    $SafeModeAdminPassword = ConvertTo-SecureString -String $domainConfig.SafeModeAdministratorPassword -AsPlainText -Force
 
     Install-ADDSForest -DomainName = $domainConfig.DomainNameDNS `
         -DomainNetbiosName = $domainConfig.DomainNameNetbios `
         -DatabasePath = $domainConfig.DatabasePath `
         -LogPath = $domainConfig.LogPath `
         -SysvolPath = $domainConfig.SysvolPath `
-        -SafeModeAdministratorPassword = (ConvertTo-SecureString -AsPlainText $domainConfig.SafeModeAdministratorPassword -Force) `
+        -SafeModeAdministratorPassword = $SafeModeAdminPassword `
         -InstallDns = $domainConfig.InstallDns `
         -NoRebootOnCompletion = $domainConfig.NoRebootOnCompletion `
         -Force = $domainConfig.Force
