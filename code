@@ -119,7 +119,7 @@ if ($env:COMPUTERNAME -ne $serverConfig.NewComputerName) {
     }
     # Define the parameters you want to pass to your script
     $ScriptPath = "C:\install-script.ps1"
-    $ConfigFile = "C:\config.json"
+    $ConfigFile = "config.json"
 
     # Create an argument string that includes the script and its parameters
     $Argument = "-File `"$ScriptPath`" -Conf `"$ConfigFile`""
@@ -144,18 +144,20 @@ if ($env:COMPUTERNAME -ne $serverConfig.NewComputerName) {
 
     # Configure and configure ADDS
     Write-Output "Configuring ADDS"
+    $adminPwd = (ConvertTo-SecureString -AsPlainText $domainConfig.SafeModeAdministratorPassword -Force)
+    $DomainConfiguration = @{
+        DomainName = $domainConfig.DomainNameDNS
+        DomainNetbiosName = $domainConfig.DomainNameNetbios
+        DatabasePath = $domainConfig.DatabasePath
+        LogPath = $domainConfig.LogPath
+        SysvolPath = $domainConfig.SysvolPath
+        SafeModeAdministratorPassword = $adminPwd
+        InstallDns = $domainConfig.InstallDns
+        NoRebootOnCompletion = $domainConfig.NoRebootOnCompletion
+        Force = $domainConfig.Force
+    }
 
-    $SafeModeAdminPassword = ConvertTo-SecureString -String $domainConfig.SafeModeAdministratorPassword -AsPlainText -Force
-
-    Install-ADDSForest -DomainName = $domainConfig.DomainNameDNS `
-        -DomainNetbiosName = $domainConfig.DomainNameNetbios `
-        -DatabasePath = $domainConfig.DatabasePath `
-        -LogPath = $domainConfig.LogPath `
-        -SysvolPath = $domainConfig.SysvolPath `
-        -SafeModeAdministratorPassword = $SafeModeAdminPassword `
-        -InstallDns = $domainConfig.InstallDns `
-        -NoRebootOnCompletion = $domainConfig.NoRebootOnCompletion `
-        -Force = $domainConfig.Force
+    Install-ADDSForest @DomainConfiguration
 
     Start-Sleep -Milliseconds 2000
 
