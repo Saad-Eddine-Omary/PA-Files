@@ -78,7 +78,6 @@
     }
 }
 
-
 param (
     [string] $ConfigFile
 )
@@ -178,25 +177,19 @@ Write-Output "Configuring DHCP"
 # Create DHCP Security Groups
 netsh dhcp add securitygroups
 
-$ServerFQDN = "$($serverConfig.NewComputerName).$($domainConfig.DomainNameDNS)"
-
 # Authorize DHCP Server in Active Directory
-Add-DhcpServerInDC -DnsName $ServerFQDN -IPAddress $serverConfig.IPAddress
+Add-DhcpServerInDC -DnsName $serverConfig.NewComputerName -IPAddress $serverConfig.IPAddress
 
 # Notify Server Manager Post-Installation Completion
 Set-ItemProperty -Path registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\ServerManager\Roles\12 -Name ConfigurationState -Value 2
 
 # Set Server-Level DNS Dynamic Update Configuration
-Set-DhcpServerv4DnsSetting -ComputerName $ServerFQDN -DynamicUpdates "Always" -DeleteDnsRRonLeaseExpiry $True
+Set-DhcpServerv4DnsSetting -ComputerName $serverConfig.NewComputerName -DynamicUpdates "Always" -DeleteDnsRRonLeaseExpiry $True
 
 # Configure DHCP Scopes
-$dhcpConfig.Scopes | ForEach-Object {
-    Add-DhcpServerv4Scope -Name $_.Name -StartRange $_.StartRange -EndRange $_.EndRange -SubnetMask $_.SubnetMask -State $_.State -LeaseDuration $_.LeaseDuration -Description $_.Description
-}
-
 $dhcpConfig | ForEach-Object {
     Add-DhcpServerv4Scope -Name $_.ScopeName -StartRange $_.StartRange -EndRange $_.EndRange -SubnetMask $_.SubnetMask -State $_.State
-    Set-DhcpServerv4OptionValue -OptionID 3 -Value $_.DefaultGateway -ScopeID $_.ScopeID -ComputerName $ServerFQDN
+    Set-DhcpServerv4OptionValue -OptionID 3 -Value $_.DefaultGateway -ScopeID $_.ScopeID -ComputerName $serverConfig.NewComputerName
     Set-DhcpServerv4OptionValue -DnsDomain $domainConfig.DomainNameDNS -DnsServer $serverConfig.IPAddress
 }
 
@@ -209,3 +202,4 @@ Start-Sleep -Milliseconds 1000
 Write-Output "Restarting the server..."
 
 Restart-Computer
+
