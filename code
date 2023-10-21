@@ -122,7 +122,7 @@ if ($env:COMPUTERNAME -ne $serverConfig.NewComputerName) {
     $ConfigFile = "config.json"
 
     # Create an argument string that includes the script and its parameters
-    $Argument = "-File `"$ScriptPath`" -Conf `"$ConfigFile`""
+    $Argument = "-File `"$ScriptPath`" -ConfigFile `"$ConfigFile`""
     # Create a scheduled task to rerun this script after renaming
     $Action = New-ScheduledTaskAction -Execute 'Powershell' -Argument $Argument
     $Trigger = New-ScheduledTaskTrigger -AtLogon
