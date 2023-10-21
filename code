@@ -1,34 +1,211 @@
-# Variables for AD DS configuration
-$DomainName = "yourdomain.local"
-$SafeModeAdministratorPassword = "YourPassword123"  # Change this to a secure password
-$DNSAddress = "127.0.0.1"  # Replace with your DNS server IP if different
+{
+    "ServerConfiguration": {
+        "NewComputerName": "DC01-2022",
+        "IPAddress": "10.0.10.1",
+        "PrefixLength": "24",
+        "DefaultGateway": "10.0.10.254",
+        "DNSAddresses": [
+            "127.0.0.1"
+        ],
+        "NewAdapterName": "CORE",
+        "FeatureList": [
+            "AD-Domain-Services",
+            "UpdateServices",
+            "DHCP"
+        ]
+    },
+    "DomainConfiguration": {
+        "DomainNameDNS": "securify-stack.corp",
+        "DomainNameNetbios": "SECURIFY-STACK",
+        "DatabasePath": "C:\\Windows\\NTDS",
+        "LogPath": "C:\\Windows\\NTDS",
+        "SysvolPath": "C:\\Windows\\SYSVOL",
+        "SafeModeAdministratorPassword": "P@ssw0rd!",
+        "InstallDns": true,
+        "NoRebootOnCompletion": true,
+        "Force": true
+    },
+    "WSUSConfiguration": {
+        "HardDriveToUse": "D:",
+        "ContentDir": "WSUS"
+    },
+    "DHCPConfiguration": {
+        "CORE-VLAN": {
+            "ScopeName": "CORE-VLAN",
+            "StartRange": "10.0.10.10",
+            "EndRange": "10.0.10.240",
+            "SubnetMask": "255.255.255.0",
+            "DefaultGateway": "10.0.10.254",
+            "State": "Active",
+            "ScopeID": "10.0.10.0"
+        },
+        "MONITORING-VLAN": {
+            "ScopeName": "MONITORING-VLAN",
+            "StartRange": "10.0.20.10",
+            "EndRange": "10.0.20.240",
+            "SubnetMask": "255.255.255.0",
+            "DefaultGateway": "10.0.20.254",
+            "State": "Active",
+            "ScopeID": "10.0.20.0"
+        },
+        "INTERNAL-APPS-VLAN": {
+            "ScopeName": "INTERNAL-APPS-VLAN",
+            "StartRange": "10.0.30.10",
+            "EndRange": "10.0.30.240",
+            "SubnetMask": "255.255.255.0",
+            "DefaultGateway": "10.0.30.254",
+            "State": "Active",
+            "ScopeID": "10.0.30.0"
+        },
+        "USERS-VLAN": {
+            "ScopeName": "USERS-VLAN",
+            "StartRange": "10.0.40.10",
+            "EndRange": "10.0.40.240",
+            "SubnetMask": "255.255.255.0",
+            "DefaultGateway": "10.0.40.254",
+            "State": "Active",
+            "ScopeID": "10.0.40.0"
+        },
+        "EXTERNAL-VLAN": {
+            "ScopeName": "EXTERNAL-VLAN",
+            "StartRange": "10.0.80.10",
+            "EndRange": "10.0.80.240",
+            "SubnetMask": "255.255.255.0",
+            "DefaultGateway": "10.0.80.254",
+            "State": "Active",
+            "ScopeID": "10.0.80.0"
+        }
+    }
+}
 
-# Variables for DHCP configuration
-$DHCPStartRange = "192.168.1.10"
-$DHCPEndRange = "192.168.1.100"
-$SubnetMask = "255.255.255.0"
-$DHCPScopeName = "YourScopeName"
 
-# New hostname for the server
-$NewHostname = "NewServerName"  # Replace with the desired hostname
+param (
+    [string] $ConfigFile
+)
 
-# Install AD DS role and promote the server
-Install-WindowsFeature -Name AD-Domain-Services -IncludeManagementTools
-Install-ADDSDomainController -InstallDns -DomainName $DomainName -SafeModeAdministratorPassword (ConvertTo-SecureString $SafeModeAdministratorPassword -AsPlainText -Force)
+# Check if the config file exists
+if (-not (Test-Path $ConfigFile)) {
+    Write-Host "Config file not found: $ConfigFile"
+    Exit
+}
 
-# Rename the host (computer)
-Rename-Computer -NewName $NewHostname -Force
+# Read the configuration from the JSON file
+$config = Get-Content $ConfigFile | ConvertFrom-Json
 
-# Install DHCP role and create a new scope
-Install-WindowsFeature -Name DHCP -IncludeManagementTools
-Add-DhcpServerv4Scope -Name $DHCPScopeName -StartRange $DHCPStartRange -EndRange $DHCPEndRange -SubnetMask $SubnetMask
+# Server Configuration
+$serverConfig = $config.ServerConfiguration
+# Domain Configuration
+$domainConfig = $config.DomainConfiguration
+# WSUS Configuration
+$wsusConfig = $config.WSUSConfiguration
+# DHCP Configuration
+$dhcpConfig = $config.DHCPConfiguration
 
-# Configure DHCP options
-Set-DhcpServerv4OptionValue -ScopeID 1 -OptionID 6 -Value $DNSAddress  # Set DNS server option
 
-# Activate the scope
-Set-DhcpServerv4Scope -ScopeId 1 -State Active
+# Rename the server
+Rename-Computer -NewName $serverConfig.NewComputerName -Force
 
-Write-Host "AD DS and DHCP roles have been installed and configured, and the host has been renamed to $NewHostname."
+# Configure the server's IP/MASK/GW
+New-NetIPAddress -IPAddress $serverConfig.IPAddress -InterfaceAlias "Ethernet" -PrefixLength $serverConfig.PrefixLength -DefaultGateway $serverConfig.DefaultGateway -AddressFamily IPv4 
+# Configure the server's DNS
+Set-DnsClientServerAddress -InterfaceAlias "Ethernet" -ServerAddresses $serverConfig.DNSAddresses
+# Disable IPv6
+Set-NetAdapterBinding -Name "Ethernet" -ComponentID ms_tcpip6 -Enabled $false
+# Rename the network adapter
+Rename-NetAdapter -Name "Ethernet" -NewName $serverConfig.NewAdapterName
+# ?? Disable the firewall ??
 
-7!yw$92@z#66$r@
+# Roles Installation
+Foreach ($Feature in $serverConfig.FeatureList) {
+    if ((Get-WindowsFeature -Name $Feature).InstallState -eq "Available") {
+        Write-Output "Feature $Feature will be installed now !"
+        Try {
+            Add-WindowsFeature -Name $Feature -IncludeManagementTools
+            Write-Output "$Feature : Installation is a success !"
+        } Catch {
+            Write-Output "$Feature : Error during installation !"
+        }
+    }
+}
+
+# Install and configure ADDS
+Write-Output "Configuring ADDS"
+
+$DomainConfiguration = @{
+    '-DomainName' = $domainConfig.DomainNameDNS;
+    '-DomainNetbiosName' = $domainConfig.DomainNameNetbios;
+    '-DatabasePath' = $domainConfig.DatabasePath;
+    '-LogPath' = $domainConfig.LogPath;
+    '-SysvolPath' = $domainConfig.SysvolPath;
+    '-SafeModeAdministratorPassword' = (ConvertTo-SecureString -AsPlainText $domainConfig.SafeModeAdministratorPassword -Force)
+    '-InstallDns' = $domainConfig.InstallDns;
+    '-NoRebootOnCompletion' = $domainConfig.NoRebootOnCompletion;
+    '-Force' = $domainConfig.Force
+}
+
+Install-ADDSForest @DomainConfiguration
+
+Start-Sleep -Milliseconds 2000
+
+Write-Output "ADDS configured !"
+
+Start-Sleep -Milliseconds 1000
+
+# Install and configure WSUS
+Write-Output "Configuring WSUS"
+
+$directoryPath = Join-Path -Path $wsusConfig.HardDriveToUse -ChildPath $wsusConfig.ContentDir
+
+if (-not (Test-Path -Path $directoryPath -PathType Container)) {
+    New-Item -Path $directoryPath -ItemType Directory
+} else {
+    Write-Host "The directory $directoryPath already exists."
+}
+
+cd 'C:\Program Files\Update Services\Tools'
+
+.\WsusUtil.exe postinstall CONTENT_DIR=$directoryPath
+
+Start-Sleep -Milliseconds 2000
+
+Write-Output "WSUS configured !"
+
+Start-Sleep -Milliseconds 1000
+
+# Install and configure DHCP
+Write-Output "Configuring DHCP"
+
+# Create DHCP Security Groups
+netsh dhcp add securitygroups
+
+$ServerFQDN = "$($serverConfig.NewComputerName).$($domainConfig.DomainNameDNS)"
+
+# Authorize DHCP Server in Active Directory
+Add-DhcpServerInDC -DnsName $ServerFQDN -IPAddress $serverConfig.IPAddress
+
+# Notify Server Manager Post-Installation Completion
+Set-ItemProperty -Path registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\ServerManager\Roles\12 -Name ConfigurationState -Value 2
+
+# Set Server-Level DNS Dynamic Update Configuration
+Set-DhcpServerv4DnsSetting -ComputerName $ServerFQDN -DynamicUpdates "Always" -DeleteDnsRRonLeaseExpiry $True
+
+# Configure DHCP Scopes
+$dhcpConfig.Scopes | ForEach-Object {
+    Add-DhcpServerv4Scope -Name $_.Name -StartRange $_.StartRange -EndRange $_.EndRange -SubnetMask $_.SubnetMask -State $_.State -LeaseDuration $_.LeaseDuration -Description $_.Description
+}
+
+$dhcpConfig | ForEach-Object {
+    Add-DhcpServerv4Scope -Name $_.ScopeName -StartRange $_.StartRange -EndRange $_.EndRange -SubnetMask $_.SubnetMask -State $_.State
+    Set-DhcpServerv4OptionValue -OptionID 3 -Value $_.DefaultGateway -ScopeID $_.ScopeID -ComputerName $ServerFQDN
+    Set-DhcpServerv4OptionValue -DnsDomain $domainConfig.DomainNameDNS -DnsServer $serverConfig.IPAddress
+}
+
+Start-Sleep -Milliseconds 2000
+
+Write-Output "DHCP configured !"
+
+Start-Sleep -Milliseconds 1000
+
+Write-Output "Restarting the server..."
+
+Restart-Computer
