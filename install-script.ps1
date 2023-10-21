@@ -65,14 +65,12 @@ if ($env:COMPUTERNAME -ne $serverConfig.NewComputerName) {
     if ($adDsService.Status -ne 'Running') {
         # Configure and configure ADDS
         Write-Output "Configuring ADDS"
-        $adminPwd = (ConvertTo-SecureString -AsPlainText $domainConfig.SafeModeAdministratorPassword -Force)
         $DomainConfiguration = @{
             DomainName = $domainConfig.DomainNameDNS
             DomainNetbiosName = $domainConfig.DomainNameNetbios
             DatabasePath = $domainConfig.DatabasePath
             LogPath = $domainConfig.LogPath
             SysvolPath = $domainConfig.SysvolPath
-            SafeModeAdministratorPassword = $adminPwd
             InstallDns = $domainConfig.InstallDns
             NoRebootOnCompletion = $domainConfig.NoRebootOnCompletion
             Force = $domainConfig.Force
@@ -133,7 +131,7 @@ if ($env:COMPUTERNAME -ne $serverConfig.NewComputerName) {
 
             # Configure DHCP Options
             Set-DhcpServerv4OptionValue -OptionID 3 -Value $vlan.DefaultGateway -ScopeID $vlan.ScopeID -ComputerName $serverConfig.NewComputerName
-            Set-DhcpServerv4OptionValue -DnsDomain $domainConfig.DomainNameDNS -DnsServer $serverConfig.IPAddress -ScopeName $vlan.ScopeName
+            Set-DhcpServerv4OptionValue -DnsDomain $domainConfig.DomainNameDNS -DnsServer $serverConfig.IPAddress -ScopeID $vlan.ScopeID
         }
 
         Start-Sleep -Milliseconds 2000
