@@ -61,8 +61,8 @@ if ($env:COMPUTERNAME -ne $serverConfig.NewComputerName) {
     Restart-Computer
 } else {
     # Check if the server is a domain controller
-    $systemInfo = systeminfo
-    if ($systemInfo -notmatch "Role: Domain Controller") {
+    $adDsService = Get-Service -Name 'NTDS'
+    if ($adDsService.Status -ne 'Running') {
         # Configure and configure ADDS
         Write-Output "Configuring ADDS"
         $adminPwd = (ConvertTo-SecureString -AsPlainText $domainConfig.SafeModeAdministratorPassword -Force)
