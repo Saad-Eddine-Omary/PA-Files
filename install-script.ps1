@@ -27,6 +27,16 @@ if ($env:COMPUTERNAME -ne $serverConfig.NewComputerName) {
     # Rename the computer
     Rename-Computer -NewName $serverConfig.NewComputerName -Force
 
+    # Configure the server's IP/MASK/GW
+    New-NetIPAddress -IPAddress $serverConfig.IPAddress -InterfaceAlias "Ethernet" -PrefixLength $serverConfig.PrefixLength -DefaultGateway $serverConfig.DefaultGateway -AddressFamily IPv4 
+    # Configure the server's DNS
+    Set-DnsClientServerAddress -InterfaceAlias "Ethernet" -ServerAddresses $serverConfig.DNSAddresses
+    # Disable IPv6
+    Set-NetAdapterBinding -Name "Ethernet" -ComponentID ms_tcpip6 -Enabled $false
+    # Rename the network adapter
+    Rename-NetAdapter -Name "Ethernet" -NewName $serverConfig.NewAdapterName
+    # ?? Disable the firewall ??
+    
     # Roles Installation
     Foreach ($Feature in $serverConfig.FeatureList) {
         if ((Get-WindowsFeature -Name $Feature).InstallState -eq "Available") {
@@ -57,16 +67,6 @@ if ($env:COMPUTERNAME -ne $serverConfig.NewComputerName) {
     $ADDSInstalled = Get-WindowsFeature -Name "AD-Domain-Services" | Select-Object -ExpandProperty InstallState
 
     if ($installState -ne 1) {
-        # Configure the server's IP/MASK/GW
-        New-NetIPAddress -IPAddress $serverConfig.IPAddress -InterfaceAlias "Ethernet" -PrefixLength $serverConfig.PrefixLength -DefaultGateway $serverConfig.DefaultGateway -AddressFamily IPv4 
-        # Configure the server's DNS
-        Set-DnsClientServerAddress -InterfaceAlias "Ethernet" -ServerAddresses $serverConfig.DNSAddresses
-        # Disable IPv6
-        Set-NetAdapterBinding -Name "Ethernet" -ComponentID ms_tcpip6 -Enabled $false
-        # Rename the network adapter
-        Rename-NetAdapter -Name "Ethernet" -NewName $serverConfig.NewAdapterName
-        # ?? Disable the firewall ??
-
 
         # Configure and configure ADDS
         Write-Output "Configuring ADDS"
